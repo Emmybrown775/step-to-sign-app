@@ -74,6 +74,13 @@ export default function RootLayout() {
               headerShown: false,
             }}
           />
+          <Stack.Screen
+            name="train_model"
+            options={{
+              title: "Train Model",
+              headerShown: false,
+            }}
+          />
         </Stack>
       </AuthProvider>
     </BLEProvider>

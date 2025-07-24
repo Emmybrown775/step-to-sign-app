@@ -59,6 +59,7 @@ export default function Index() {
 
   useEffect(() => {
     scanForDevices();
+    // router.push("/home");
   }, []);
 
   useEffect(() => {

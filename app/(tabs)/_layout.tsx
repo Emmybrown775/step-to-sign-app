@@ -28,6 +28,22 @@ export default function () {
           },
         }}
       ></Tabs.Screen>
+
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon({ focused, color, size }) {
+            return (
+              <Ionicons
+                name={focused ? "settings" : "settings-outline"}
+                size={size}
+                color={color}
+              ></Ionicons>
+            );
+          },
+        }}
+      ></Tabs.Screen>
     </Tabs>
   );
 }

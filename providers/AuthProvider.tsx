@@ -29,7 +29,7 @@ export function AuthProvider({ children }) {
       setIsAuthenticated(true);
       fetchBalanceAndPrice();
     }
-  }, [publicKey, client]);
+  }, [publicKey]);
 
   const fetchBalanceAndPrice = async () => {
     if (!client || !publicKey) return;
