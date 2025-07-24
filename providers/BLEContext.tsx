@@ -38,6 +38,7 @@ interface BluetoothLowEnergyApi {
   trainingData: {
     [key: string]: IMUData[];
   };
+  waitForTrainAck: (callback: any) => void;
 }
 
 const BLEContext = createContext<BluetoothLowEnergyApi | null>(null);

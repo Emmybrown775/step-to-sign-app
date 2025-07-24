@@ -70,7 +70,7 @@ export function useBLE() {
   const maxDisplaySamples = 500; // How many to show in UI
   const maxTotalSamples = 10000;
   const connectedDeviceRef = useRef<Device | null>(null);
-  const bleManagerRef = useRef(bleManager);
+  const onTrainAckCallBack = useRef(null);
 
   // Training-specific state
   const [currentTrainingSession, setCurrentTrainingSession] =
@@ -278,6 +278,12 @@ export function useBLE() {
             console.log("Got :" + getImuDataStats().totalSamples);
             // Handle training session completion
             handleIMUSessionStop();
+          } else if (
+            fullMessage === "TRAIN_ACK" &&
+            onTrainAckCallBack.current
+          ) {
+            console.log("sasaas");
+            onTrainAckCallBack.current();
           }
 
           return ""; // Clear buffer
@@ -286,6 +292,10 @@ export function useBLE() {
         return updatedBuffer;
       });
     }
+  };
+
+  const waitForTrainAck = (callback) => {
+    onTrainAckCallBack.current = callback;
   };
 
   // Handle IMU session stop for training
@@ -731,5 +741,6 @@ export function useBLE() {
       },
       {} as { [key: string]: IMUData[] },
     ),
+    waitForTrainAck,
   };
 }

@@ -2,8 +2,18 @@ import { TextInput, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "../ThemedText";
 import { Colors } from "../../constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
+import { useTrainingContext } from "../../providers/TrainingProvider";
 
 export default function TrainSetupView() {
+  const {
+    newGestureName,
+    setNewGestureName,
+    addGestureToList,
+    trainingState,
+    removeGestureFromList,
+    startCollectionPhase,
+  } = useTrainingContext();
+
   return (
     <View>
       <ThemedText type="subtitle" className="mb-4">
