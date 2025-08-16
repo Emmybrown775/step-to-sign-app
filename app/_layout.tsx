@@ -83,6 +83,78 @@ export default function RootLayout() {
                 headerShown: false,
               }}
             />
+
+            <Stack.Screen
+              name="change_password"
+              options={{
+                title: "Change Password",
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: Colors.dark.background,
+                },
+                headerShadowVisible: false,
+                headerTitleStyle: {
+                  fontFamily: "Livvic_500Medium",
+                  color: Colors.dark.text,
+                },
+                headerTitleAlign: "center",
+                headerTintColor: Colors.dark.text,
+              }}
+            />
+
+            <Stack.Screen
+              name="forgot_password"
+              options={{
+                title: "Forgot Password",
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: Colors.dark.background,
+                },
+                headerShadowVisible: false,
+                headerTitleStyle: {
+                  fontFamily: "Livvic_500Medium",
+                  color: Colors.dark.text,
+                },
+                headerTitleAlign: "center",
+                headerTintColor: Colors.dark.text,
+              }}
+            />
+
+            <Stack.Screen
+              name="reset_password"
+              options={{
+                title: "Reset Password",
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: Colors.dark.background,
+                },
+                headerShadowVisible: false,
+                headerTitleStyle: {
+                  fontFamily: "Livvic_500Medium",
+                  color: Colors.dark.text,
+                },
+                headerTitleAlign: "center",
+                headerTintColor: Colors.dark.text,
+              }}
+            />
+
+            <Stack.Screen
+              name="set_password"
+              options={{
+                title: "Set Password",
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: Colors.dark.background,
+                },
+                headerShadowVisible: false,
+                headerTitleStyle: {
+                  fontFamily: "Livvic_500Medium",
+                  color: Colors.dark.text,
+                },
+                headerTitleAlign: "center",
+                headerTintColor: Colors.dark.text,
+              }}
+            />
           </Stack>
         </TrainingProvider>
       </AuthProvider>

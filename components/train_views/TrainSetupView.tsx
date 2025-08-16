@@ -3,6 +3,8 @@ import { ThemedText } from "../ThemedText";
 import { Colors } from "../../constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useTrainingContext } from "../../providers/TrainingProvider";
+import { useEffect } from "react";
+import { useBLEContext } from "../../providers/BLEContext";
 
 export default function TrainSetupView() {
   const {
@@ -12,7 +14,15 @@ export default function TrainSetupView() {
     trainingState,
     removeGestureFromList,
     startCollectionPhase,
+    resetTraining,
   } = useTrainingContext();
+
+  const { clearTrainingData, clearIMUData } = useBLEContext();
+
+  useEffect(() => {
+    clearTrainingData();
+    clearIMUData();
+  }, []);
 
   return (
     <View>

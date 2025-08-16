@@ -26,6 +26,7 @@ interface TrainigProviderApi {
     currentStep: TrainingStep,
   ) => "ellipse" | "checkmark-circle" | "ellipse-outline";
   getTotalProgress: () => number;
+  modelData: any;
 }
 
 const TrainingContext = createContext<TrainigProviderApi | null>(null);

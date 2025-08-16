@@ -44,6 +44,7 @@ export function useTrainingData() {
   } = useBLEContext();
   const [newGestureName, setNewGestureName] = useState("");
   const [collectingData, setCollectingData] = useState(false);
+  const [modelData, setModelData] = useState<any>(null); // <-- store in memory
 
   const [trainingState, setTrainingState] = useState<TrainingState>({
     step: "setup",
@@ -144,7 +145,7 @@ export function useTrainingData() {
       name: newGestureName.trim(),
       dataCollected: 0,
       isComplete: false,
-      targetSamples: 1000,
+      targetSamples: 5000,
     };
 
     setTrainingState((prev) => ({
@@ -243,13 +244,13 @@ export function useTrainingData() {
         uri: fileUri,
         name: "temp.csv",
         type: "text/csv",
-      } as any); // <-- TS fix
+      } as any);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 300000);
 
       const response = await fetch(
-        "https://687c07dbe702.ngrok-free.app/train",
+        "https://5724104d6aad.ngrok-free.app/train",
         {
           method: "POST",
           body: formData,
@@ -265,17 +266,26 @@ export function useTrainingData() {
         return;
       }
 
-      console.log("asksakasjKASJ");
-
       const result = await response.json();
-      const hFileBase64 = result.model_h;
+
+      // Save model_h file
       await FileSystem.writeAsStringAsync(
         FileSystem.documentDirectory + "gesture_model.h",
-        hFileBase64,
-        {
-          encoding: FileSystem.EncodingType.Base64,
-        },
+        result.model_h,
+        { encoding: FileSystem.EncodingType.Base64 },
       );
+
+      // Save the entire response (so you can reuse later)
+      const modelJsonPath = FileSystem.documentDirectory + "model_data.json";
+      await FileSystem.writeAsStringAsync(
+        modelJsonPath,
+        JSON.stringify(result),
+        { encoding: FileSystem.EncodingType.UTF8 },
+      );
+
+      // Keep it in memory too (if needed immediately)
+      setModelData(result);
+
       console.log("Model + metadata received:", result.classes);
 
       setTrainingState((prev) => ({
@@ -493,6 +503,7 @@ export function useTrainingData() {
 
   return {
     newGestureName,
+    modelData,
     setNewGestureName,
     addGestureToList,
     trainingState,

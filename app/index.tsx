@@ -25,6 +25,9 @@ export default function Index() {
     allDevices,
     connectToDevice,
     publicKey,
+    sendMessage,
+    passwordPresent,
+    clearSequence,
   } = useBLEContext();
 
   const [isScanning, setIsScanning] = useState(false);
@@ -64,12 +67,25 @@ export default function Index() {
 
   useEffect(() => {
     if (publicKey) {
-      setConnectionStatus("Success! Redirecting...");
-      setTimeout(() => {
-        router.replace("/(tabs)/home");
-      }, 1000);
+      setConnectionStatus("Checking Password...");
+      sendMessage("<pass-set>");
     }
   }, [publicKey]);
+
+  useEffect(() => {
+    if (publicKey) {
+      if (passwordPresent) {
+        setTimeout(() => {
+          router.replace("/(tabs)/home");
+        }, 1000);
+      } else {
+        setTimeout(() => {
+          clearSequence();
+          router.replace("/set_password");
+        }, 1000);
+      }
+    }
+  }, [passwordPresent, publicKey]);
 
   useEffect(() => {
     if (allDevices.length > 0) {
@@ -140,7 +156,7 @@ export default function Index() {
                 style={{ color: Colors.dark.textSecondary }}
               >
                 {publicKey
-                  ? "Getting ready..."
+                  ? "Checking Password..."
                   : "Retrieving wallet information..."}
               </ThemedText>
               <ActivityIndicator

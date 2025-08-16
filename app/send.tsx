@@ -40,7 +40,7 @@ export default function Send() {
 
       const txString = Buffer.from(txBytes).toString("hex");
       sendMessage("<msg" + txString + ">");
-      changeState(STATE.AWAITING_SIG);
+      // changeState(STATE.AWAITING_SIG);
     } catch (error) {
       console.log(error);
     }

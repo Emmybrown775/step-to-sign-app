@@ -16,11 +16,14 @@ import { useState, useEffect } from "react";
 import { useBLEContext } from "../providers/BLEContext";
 import TrainViewMode from "../components/TrainViewMode";
 import ManageViewMode from "../components/ManageViewMode";
+import { useTrainingContext } from "../providers/TrainingProvider";
 
 type ViewMode = "train" | "manage";
 
 export default function TrainModel() {
-  const { connectedDevice, sendMessage } = useBLEContext();
+  const { connectedDevice, sendMessage, clearIMUData, clearTrainingData } =
+    useBLEContext();
+  const { resetTraining } = useTrainingContext();
 
   const [viewMode, setViewMode] = useState<ViewMode>("train");
 

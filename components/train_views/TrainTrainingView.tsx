@@ -2,18 +2,22 @@ import { ActivityIndicator, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "../ThemedText";
 import { Colors } from "../../constants/Colors";
 import { useTrainingContext } from "../../providers/TrainingProvider";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useBLEContext } from "../../providers/BLEContext";
 
 type TransferStep = "waiting" | "ready" | "error";
 
 export default function TrainTrainingView() {
-  const { trainingState, trainModel } = useTrainingContext();
+  const { trainingState, trainModel, modelData } = useTrainingContext();
   const { sendMessage, waitForTrainAck } = useBLEContext();
   const [transferStep, setTransferStep] = useState<TransferStep>("waiting");
+  const hasSentRef = useRef(false);
 
   useEffect(() => {
-    sendMessage("<TRAIN_START>");
+    if (hasSentRef.current) return; // Skip if already sent
+
+    hasSentRef.current = true;
+    sendMessage(`<TRAIN_START+${modelData.classes}>`);
 
     waitForTrainAck(() => {
       console.log("HEREEEE");

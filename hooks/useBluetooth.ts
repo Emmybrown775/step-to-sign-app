@@ -61,6 +61,8 @@ export function useBLE() {
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
   const [publicKey, setPublickKey] = useState<string | null>(null);
+  const [passwordPresent, setPasswordPresent] = useState<boolean>(false);
+
   const [systemState, setSystemState] = useState<STATE>(STATE.IDLE);
   const [imuStreamingEnabled, setImuStreamingEnabled] = useState(false);
   const [imuData, setImuData] = useState<IMUData[]>([]);
@@ -68,9 +70,12 @@ export function useBLE() {
   const allImuDataRef = useRef<IMUData[]>([]); // Store ALL data here
   const client = new SuiClient({ url: getFullnodeUrl("testnet") });
   const maxDisplaySamples = 500; // How many to show in UI
-  const maxTotalSamples = 10000;
+  const maxTotalSamples = 100000;
   const connectedDeviceRef = useRef<Device | null>(null);
   const onTrainAckCallBack = useRef(null);
+  const onConfirmSetPasswordAckCallback = useRef(null);
+  const [recievedSequence, setRecievedSequence] = useState<string | null>(null);
+  const [recievedState, setRecievedState] = useState<string | null>(null);
 
   // Training-specific state
   const [currentTrainingSession, setCurrentTrainingSession] =
@@ -118,7 +123,7 @@ export function useBLE() {
         return;
       }
 
-      if (device.name && device.name.includes("Step-to-Sign")) {
+      if (device.name && device.name.includes("Step-to-")) {
         setAllDevices((prevState) => {
           return prevState.some((d) => d.id === device.id)
             ? prevState
@@ -191,6 +196,7 @@ export function useBLE() {
     try {
       const deviceConnection = await bleManager.connectToDevice(device.id);
       setConnectedDevice(deviceConnection);
+      deviceConnection.onDisconnected(disconnectFromDevice);
       await deviceConnection.discoverAllServicesAndCharacteristics();
       bleManager.stopDeviceScan();
 
@@ -199,13 +205,6 @@ export function useBLE() {
         NUS_SERVICE_UUID,
         NUS_TX_CHARACTERISTIC_UUID,
         textMessageCallback,
-      );
-
-      // Monitor IMU characteristic for high-frequency data
-      deviceConnection.monitorCharacteristicForService(
-        NUS_SERVICE_UUID,
-        NUS_IMU_TX_CHARACTERISTIC_UUID,
-        imuDataCallback,
       );
 
       // Send default message on connect
@@ -231,7 +230,6 @@ export function useBLE() {
       console.error("Text notification error", error);
       return;
     }
-
     const base64Value = characteristics.value;
     if (base64Value) {
       const chunk = Buffer.from(base64Value, "base64").toString("utf-8");
@@ -270,8 +268,14 @@ export function useBLE() {
             setPublickKey("0x" + Buffer.from(hash).toString("hex"));
           } else if (fullMessage.startsWith("SIG:")) {
             const signature = fullMessage.replace("SIG:", "").split("msg");
-            setSystemState(STATE.BROADCASTING_TX);
-            broadcastTX(signature[0], signature[1]);
+            if (signature[0] == "error") {
+              Alert.prompt("Wrong Password");
+              setSystemState(STATE.IDLE);
+            } else {
+              setSystemState(STATE.BROADCASTING_TX);
+              broadcastTX(signature[0], signature[1]);
+            }
+
             console.log("✍️ Signature received:", signature);
           } else if (fullMessage === "IMU_STOPPED") {
             console.log("IMU stopped");
@@ -282,10 +286,38 @@ export function useBLE() {
             fullMessage === "TRAIN_ACK" &&
             onTrainAckCallBack.current
           ) {
-            console.log("sasaas");
             onTrainAckCallBack.current();
-          }
+          } else if (fullMessage.startsWith("PASSWORD")) {
+            const strings = fullMessage.split("+");
+            const state = strings[1];
 
+            if (state == "1") {
+              setPasswordPresent(true);
+            } else {
+              setPasswordPresent(false);
+            }
+          } else if (fullMessage.startsWith("SET_PASSWORD_ACK")) {
+            const strings = fullMessage.split("+");
+            const state = strings[1];
+
+            if (state == "1") {
+              onConfirmSetPasswordAckCallback.current(true);
+            } else {
+              onConfirmSetPasswordAckCallback.current(false);
+            }
+          } else if (fullMessage.startsWith("morse")) {
+            const strings = fullMessage.split("+");
+
+            // if (
+            //   strings[1] === "set_password_denied" ||
+            //   strings[1] === "set_password_confirmed"
+            // ) {
+            //   setRecievedSequence(null);
+            //   setRecievedState(null);
+            // }
+            setRecievedSequence(strings[2]);
+            setRecievedState(strings[1]);
+          }
           return ""; // Clear buffer
         }
 
@@ -294,8 +326,18 @@ export function useBLE() {
     }
   };
 
+  const clearSequence = () => {
+    setRecievedSequence(null);
+    setRecievedState(null);
+  };
+
   const waitForTrainAck = (callback) => {
     onTrainAckCallBack.current = callback;
+  };
+
+  const waitForConfirmSetPasswordAck = (callback) => {
+    onConfirmSetPasswordAckCallback.current = (active: boolean) =>
+      callback(active);
   };
 
   // Handle IMU session stop for training
@@ -397,7 +439,7 @@ export function useBLE() {
     try {
       if (message.length <= BLE_CHUNK_SIZE) {
         const base64Message = Buffer.from(message).toString("base64");
-        await device.writeCharacteristicWithoutResponseForService(
+        await device.writeCharacteristicWithResponseForService(
           NUS_SERVICE_UUID,
           NUS_RX_CHARACTERISTIC_UUID,
           base64Message,
@@ -412,7 +454,7 @@ export function useBLE() {
         const chunk = message.substring(i, i + BLE_CHUNK_SIZE);
         const base64Chunk = Buffer.from(chunk).toString("base64");
 
-        await device.writeCharacteristicWithoutResponseForService(
+        await device.writeCharacteristicWithResponseForService(
           NUS_SERVICE_UUID,
           NUS_RX_CHARACTERISTIC_UUID,
           base64Chunk,
@@ -628,19 +670,13 @@ export function useBLE() {
 
   // Updated sendMessage function to handle chunking
 
-  const disconnectFromDevice = async () => {
+  const disconnectFromDevice = () => {
     try {
-      if (connectedDevice) {
-        await bleManager.cancelDeviceConnection(connectedDevice.id);
-        setConnectedDevice(null);
-        setImuStreamingEnabled(false);
-        // Clear buffers on disconnect
-        setBleBuffer("");
-        setImuData([]);
-        // Clear training session
-        setCurrentTrainingSession(null);
-        trainingSessionRef.current = null;
-      }
+      setConnectedDevice(null);
+      setBleBuffer("");
+      setPublickKey(null);
+      setAllDevices([]);
+      router.push("/");
     } catch (error) {
       console.error(error);
     }
@@ -676,7 +712,7 @@ export function useBLE() {
         }
       }
 
-      router.push(
+      router.replace(
         `/success?amount=${amount}&recipient=${recipient}&txHash=${txHash}`,
       );
     } catch (error) {
@@ -714,6 +750,7 @@ export function useBLE() {
     sendControlMessage,
     sendTransferMessage,
     publicKey,
+    passwordPresent,
     client,
     systemState,
     changeState,
@@ -742,5 +779,9 @@ export function useBLE() {
       {} as { [key: string]: IMUData[] },
     ),
     waitForTrainAck,
+    waitForConfirmSetPasswordAck,
+    recievedSequence,
+    recievedState,
+    clearSequence,
   };
 }

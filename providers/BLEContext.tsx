@@ -15,6 +15,7 @@ interface BluetoothLowEnergyApi {
   sendTransferMessage: (message: String) => Promise<void>;
 
   publicKey: string;
+  passwordPresent: boolean;
   client: SuiClient;
   systemState: STATE;
   changeState: (state: STATE) => void;
@@ -39,6 +40,10 @@ interface BluetoothLowEnergyApi {
     [key: string]: IMUData[];
   };
   waitForTrainAck: (callback: any) => void;
+  waitForConfirmSetPasswordAck: (callback: any) => void;
+  recievedSequence: string;
+  recievedState: string;
+  clearSequence: () => void;
 }
 
 const BLEContext = createContext<BluetoothLowEnergyApi | null>(null);

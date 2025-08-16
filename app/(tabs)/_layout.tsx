@@ -44,6 +44,22 @@ export default function () {
           },
         }}
       ></Tabs.Screen>
+
+      <Tabs.Screen
+        name="security"
+        options={{
+          title: "Security",
+          tabBarIcon({ focused, color, size }) {
+            return (
+              <Ionicons
+                name={focused ? "lock-closed" : "lock-closed-outline"}
+                size={size}
+                color={color}
+              ></Ionicons>
+            );
+          },
+        }}
+      ></Tabs.Screen>
     </Tabs>
   );
 }

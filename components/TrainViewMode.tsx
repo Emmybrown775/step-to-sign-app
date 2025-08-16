@@ -23,8 +23,17 @@ import { TrainingStep } from "../hooks/useTrainingData";
 import { useTrainingContext } from "../providers/TrainingProvider";
 
 export default function TrainViewMode() {
-  const { getStepIcon, getStepColor, trainingState, getTotalProgress } =
-    useTrainingContext();
+  const {
+    getStepIcon,
+    getStepColor,
+    trainingState,
+    getTotalProgress,
+    resetTraining,
+  } = useTrainingContext();
+
+  useEffect(() => {
+    resetTraining();
+  }, []);
 
   return (
     <>

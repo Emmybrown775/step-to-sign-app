@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
   const [suiUsdPrice, setSuiUsdPrice] = useState<number | null>(null);
 
   // Get data from BLE context
-  const { publicKey, connectedDevice, client, changeState } = useBLEContext();
+  const { publicKey, client, sendMessage } = useBLEContext();
 
   useEffect(() => {
     // When BLE gets public key, update auth state
